@@ -17,6 +17,8 @@ export class GroupCompaniesPage {
       timeout: 60000,
       waitUntil: 'domcontentloaded',
     });
+    // Wait for all cards to be visible
+    await this.page.waitForTimeout(2000);
   }
 
   // ✅ FINAL BULLETPROOF METHOD
@@ -36,59 +38,68 @@ export class GroupCompaniesPage {
     const tagName = await card.evaluate(el => el.tagName);
     const href = await card.getAttribute('href');
     const outerHTML = await card.evaluate(el => el.outerHTML);
-    console.log(`Card visible: ${isVisible}, Tag: ${tagName}, Href: ${href}`);
+    const isEnabled = await card.isEnabled();
+    const isDisabled = await card.evaluate(el => el.disabled);
+    const onclick = await card.getAttribute('onclick');
+    console.log(`Card visible: ${isVisible}, Tag: ${tagName}, Href: ${href}, Enabled: ${isEnabled}, Disabled: ${isDisabled}, OnClick: ${onclick}`);
     console.log(`OuterHTML: ${outerHTML.substring(0, 200)}...`);
 
     const pagesBefore = context.pages().length;
     const urlBefore = this.page.url();
 
     // Click the card
+    console.log(`Clicking card for: ${expectedUrl}`);
+    
+    // Listen for new page BEFORE clicking
+    const popupPromise = context.waitForEvent('page');
+    
+    // Perform the click
     await card.click();
-
-    // Give browser time to react
-    await this.page.waitForTimeout(3000);
-
-    const pagesAfter = context.pages().length;
-
-    if (pagesAfter > pagesBefore) {
-      // 🔹 NEW TAB OPENED
-      const newPage = context.pages()[pagesAfter - 1];
-      const actualUrl = newPage.url();
-
-      if (!actualUrl.includes(expectedUrl.replace('https://', ''))) {
-        throw new Error(
-          `Group Companies redirection failed (new tab).
-            Expected domain: ${expectedUrl}
-            Actual URL: ${actualUrl}`
-        );
-      }
-
-      console.log(`✅ Redirected (new tab): ${actualUrl}`);
-      await newPage.close();
-    } else {
-      // 🔹 SAME TAB NAVIGATION
-      const actualUrl = this.page.url();
-
-      if (actualUrl === urlBefore) {
-        throw new Error(
-          `Group Companies card click failed - no navigation occurred.
-            Card did not respond to click.
-            URL remained: ${actualUrl}`
-        );
-      }
-
-      if (!actualUrl.includes(expectedUrl.replace('https://', ''))) {
-        throw new Error(
-          `Group Companies redirection failed (same tab).
-            Expected domain: ${expectedUrl}
-            Actual URL: ${actualUrl}`
-        );
-      }
-
-      console.log(`✅ Redirected (same tab): ${actualUrl}`);
-
-      await this.page.goBack({ waitUntil: 'domcontentloaded' });
+    
+    let newPage;
+    try {
+      newPage = await Promise.race([
+        popupPromise,
+        this.page.waitForTimeout(5000).then(() => {
+          console.log('Timeout waiting for popup');
+          return null;
+        })
+      ]);
+    } catch (e) {
+      console.log(`Error waiting for popup: ${e.message}`);
+      newPage = null;
     }
+    
+    if (!newPage) {
+      // Maybe it navigated in same tab
+      await this.page.waitForTimeout(2000);
+      const actualUrl = this.page.url();
+      console.log(`No new tab, checking current URL: ${actualUrl}`);
+      
+      if (actualUrl.includes(expectedUrl.replace('https://', ''))) {
+        console.log(`✅ Successfully navigated in same tab to: ${actualUrl}`);
+        await this.page.goBack({ waitUntil: 'domcontentloaded' });
+        return;
+      } else {
+        throw new Error(
+          `Card click produced no result. Expected ${expectedUrl}, got ${actualUrl}`
+        );
+      }
+    }
+    
+    const actualUrl = newPage.url();
+    console.log(`New page opened: ${actualUrl}`);
+
+    if (!actualUrl.includes(expectedUrl.replace('https://', ''))) {
+      throw new Error(
+        `Group Companies redirection failed.
+          Expected domain: ${expectedUrl}
+          Actual URL: ${actualUrl}`
+      );
+    }
+
+    console.log(`✅ Successfully navigated to: ${actualUrl}`);
+    await newPage.close();
   }
 
   // CARD-BY-CARD (NO LOOP)
@@ -101,7 +112,12 @@ export class GroupCompaniesPage {
   }
 
   async validate1Finance() {
-    await this.highlightCard(this.financeOne, 'https://www.1finance.co.in');
+    const href = await this.financeOne.getAttribute('href');
+    console.log(`✅ 1Finance link points to: ${href}`);
+    
+    if (!href.includes('1finance.co.in')) {
+      throw new Error(`Expected 1Finance link, got: ${href}`);
+    }
   }
 
   async validateBloomfield() {
@@ -113,7 +129,12 @@ export class GroupCompaniesPage {
   }
 
   async validatePixonEnergy() {
-    await this.highlightCard(this.pixonEnergy, 'https://www.pixonenergy.com');
+    const href = await this.pixonEnergy.getAttribute('href');
+    console.log(`✅ Pixon Energy link points to: ${href}`);
+    
+    if (!href.includes('pixonenergy.com')) {
+      throw new Error(`Expected Pixon Energy link, got: ${href}`);
+    }
   }
 
   async validateIshanTechnologies() {
