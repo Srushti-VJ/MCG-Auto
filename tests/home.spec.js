@@ -6,6 +6,7 @@ test('Home page – correct card-by-card automation', async ({ page }) => {
 
   await home.openHome();
 
+
   await home.clickDiscoverOurStory();
   await home.openHome();
 
