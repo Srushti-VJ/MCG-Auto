@@ -6,10 +6,7 @@ test('Careers page UI interactions (network idle)', async ({ page }) => {
 
   await careersPage.openCareersPage();
 
-  // Mail first
   await careersPage.verifyMailLink();
 
-  // Image scroll
   await careersPage.scrollImagesWithArrows();
-
 });

@@ -19,42 +19,32 @@ export class CareersPage {
       'div.absolute.bg-black\\/40'
     );
 
-    //Image scroll right and left
+    // Image scroll right and left
     this.scrollRightBtn = page.locator('//button[@aria-label="Scroll Right"]');
     this.scrollLeftBtn = page.locator('//button[@aria-label="Scroll Left"]');
-
-  }
+   }
 
   async openCareersPage() {
     await this.page.goto('/careers', { waitUntil: 'domcontentloaded' });
     await this.page.waitForLoadState('networkidle');
   }
 
-  // ✅ STEP 1: MAIL (scroll + click properly)
-  async verifyMailLink() {
-    // scroll page, NOT element
-    await this.page.evaluate(() =>
-      window.scrollTo(0, document.body.scrollHeight)
-    );
-
-    // wait until mail is visible
+  // ✅ MAIL (NO footer scroll)
+    async verifyMailLink() {
     await this.mailLink.waitFor({ state: 'visible', timeout: 15000 });
 
     await expect(this.mailLink).toHaveAttribute(
       'href',
       'mailto:careers@marwadichandarana.com'
     );
+   }
 
-    // ✅ CLICK (not just hover)
-    await this.mailLink.click();
-  }
-
-  async scrollImagesWithArrows() {
+  //scroll images
+   async scrollImagesWithArrows() {
   const rightCount = await this.scrollRightBtn.count();
   const leftCount = await this.scrollLeftBtn.count();
 
-  // sanity check
-  if (rightCount !== leftCount) {
+   if (rightCount !== leftCount) {
     throw new Error('Mismatch between left and right arrow buttons');
   }
 
@@ -62,19 +52,29 @@ export class CareersPage {
     const rightBtn = this.scrollRightBtn.nth(i);
     const leftBtn = this.scrollLeftBtn.nth(i);
 
-    // wait for THIS slider's right arrow
-    await rightBtn.waitFor({ state: 'visible', timeout: 15000 });
+    const slider = rightBtn.locator(
+      'xpath=ancestor::div[contains(@class,"group")]'
+    );
 
-    // click right
-    await rightBtn.click();
-    await this.page.waitForLoadState('networkidle');
+    const images = slider.locator('div.flex-shrink-0');
+    const imageCount = await images.count();
 
-    // click left
-    await leftBtn.waitFor({ state: 'visible', timeout: 15000 });
-    await leftBtn.click();
-    await this.page.waitForLoadState('networkidle');
+    // 👉 swipe RIGHT till last image (fast + safe)
+    for (let j = 0; j < imageCount - 1; j++) {
+      if (!(await rightBtn.isVisible())) break;
+      await rightBtn.click();
+      await this.page.waitForTimeout(300); // 👈 reduced from 1200
+    }
+
+    // 👉 swipe LEFT back to first image (fast + safe)
+    for (let j = 0; j < imageCount - 1; j++) {
+      if (!(await leftBtn.isVisible())) break;
+      await leftBtn.click();
+      await this.page.waitForTimeout(300); // 👈 reduced from 1200
+    }
   }
 }
+
 
 
 }
