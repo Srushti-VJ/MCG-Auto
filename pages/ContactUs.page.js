@@ -15,8 +15,8 @@ class ContactPage {
   "//div[h3 and .//a[starts-with(@href,'tel:')] and .//a[starts-with(@href,'mailto:')] and count(.//h3)=1 and not(ancestor::footer)]";
 
   // phone & mail INSIDE a card (RELATIVE locators)
-    this.cardPhoneLink = ".//a[starts-with(@href,'tel:')]";
-    this.cardMailLink  = ".//a[starts-with(@href,'mailto:')]";
+    this.cardPhoneLink = "xpath=.//a[starts-with(@href,'tel:')]";
+    this.cardMailLink  = "xpath=.//a[starts-with(@href,'mailto:')]";
   }
 
   async openContactPage() {
