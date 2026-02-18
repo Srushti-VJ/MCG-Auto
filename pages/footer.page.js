@@ -240,42 +240,44 @@ class FooterPage {
     expect(mapUrl).toContain('google.com/maps');
   }
 
-  // show to manager
-  await this.page.waitForTimeout(3000);
+  // wait till MSFL section is visible (React rendered)
+await this.msflSection.waitFor({ state: 'visible' });
+
 }
 
 // ---------- LEGAL & ACCESSIBILITY LINKS ----------
- // ---------- LEGAL & ACCESSIBILITY ----------
 async clickAllLegalLinks() {
-  const legalSection = this.page.locator(
-    'nav[aria-label="Legal and accessibility"]'
-  );
 
-  const links = legalSection.locator('a');
+  // Disable animations (fix layout shift from ticker & scroll reveal)
+  await this.page.addStyleTag({
+    content: `*,*::before,*::after{
+      animation:none!important;
+      transition:none!important;
+    }`
+  });
+
+  const links = this.page.locator('nav[aria-label="Legal and accessibility"] a');
   const count = await links.count();
   expect(count).toBeGreaterThan(0);
 
   for (let i = 0; i < count; i++) {
+
     const link = links.nth(i);
     const href = await link.getAttribute('href');
 
-    console.log('Legal Link:', href);
+    console.log(`Legal Link ${i + 1}: ${href}`);
 
+    await link.scrollIntoViewIfNeeded();
     await link.click();
 
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForURL(`**${href}**`);
 
     console.log('✅ Legal page opened:', this.page.url());
 
-    await this.page.goBack({ waitUntil: 'networkidle' });
-
-    await this.page.evaluate(() =>
-      window.scrollTo(0, document.body.scrollHeight)
-    );
+    await this.page.goBack();
+    await this.page.waitForLoadState('domcontentloaded');
   }
 }
-
-
 
 
 }
