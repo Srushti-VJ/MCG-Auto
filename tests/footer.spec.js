@@ -7,6 +7,7 @@ const footerData = require('../Data/footer.data'); // ✅ THIS WAS MISSING
 test('Footer - Quick Links + Core Business Verticals (BEST PRACTICE)', async ({ page }) => {
   const footerPage = new FooterPage(page);
 
+
   await footerPage.goto();
 
   // QUICK LINKS
@@ -32,6 +33,8 @@ test('Footer - Quick Links + Core Business Verticals (BEST PRACTICE)', async ({ 
 
   // LEGAL & ACCESSIBILITY
   await footerPage.clickAllLegalLinks();
+
+   
 
 
 
