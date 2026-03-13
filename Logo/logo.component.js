@@ -9,19 +9,37 @@ class LogoComponent {
 
   }
 
- async verifyLogoBehaviour() {
+async verifyLogoBehaviour() {
 
-  await this.headerLogo.scrollIntoViewIfNeeded();
+  const currentUrl = this.page.url();
 
-  await expect(this.headerLogo).toBeVisible();
+  // 👀 Highlight the Logo so you can SEE what is getting clicked
+  await this.headerLogo.first().evaluate(el => {
+    el.style.border = "5px solid red";
+    el.style.backgroundColor = "blue";
+  });
 
-  await this.headerLogo.click({ force: true });
+  // 👀 Wait so you can SEE the highlight
+  await this.page.waitForTimeout(3000);
 
-  await expect(this.page).toHaveURL(/.*marwadichandaranagroup.com/);
+  // 🖱 Click the logo
+  await Promise.all([
+    this.page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
+    this.headerLogo.first().click()
+  ]);
 
-  console.log('✅ Header Logo navigated successfully');
+  // 👀 Wait so you can SEE the Home page after navigation
+  await this.page.waitForTimeout(3000);
+
+  // ✅ Now verify navigation actually happened
+  await expect(this.page).not.toHaveURL(currentUrl);
+
+  await expect(this.page).toHaveURL('https://www.marwadichandaranagroup.com/');
+
+  console.log('✅ Logo CLICKED and navigated to Homepage');
 
 }
+
 
 
 

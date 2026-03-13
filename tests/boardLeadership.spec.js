@@ -1,12 +1,20 @@
 import { test } from '@playwright/test';
 import { BoardLeadershipPage } from '../pages/boardLeadership.page.js';
 
-test('Board & Leadership – validate board members data', async ({ page }) => {
-  const board = new BoardLeadershipPage(page);
+test.describe('Board & Leadership Page', () => {
 
-  await board.openBoardLeadership();
-  await board.scrollPage();
-  await board.validateBoardData();
-  await board.validateStatsData();
+  test('Validate board members and stats data', async ({ page }) => {
+
+    const board = new BoardLeadershipPage(page);
+
+    await board.openBoardLeadership();
+
+    await board.scrollPage();
+
+    await board.validateBoardData();
+
+    await board.validateStatsData();
+
+  });
 
 });
