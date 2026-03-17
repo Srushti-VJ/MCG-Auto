@@ -1,12 +1,15 @@
 import { test } from '@playwright/test';
 import { CareersPage } from '../pages/Careers.page.js';
 
-test('Careers page UI interactions (network idle)', async ({ page }) => {
-  const careersPage = new CareersPage(page);
+test('Careers Page Validation', async ({ page }) => {
 
-  await careersPage.openCareersPage();
+  const careers = new CareersPage(page);
 
-  await careersPage.verifyMailLink();
+  await careers.openCareersPage();
 
-  await careersPage.scrollImagesWithArrows();
+  await careers.validateCareerCards();
+
+  await careers.validateCurrentOpenings();
+
+   await careers.scrollImagesWithArrows();
 });
