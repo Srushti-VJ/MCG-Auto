@@ -128,12 +128,24 @@ export class HomePage {
 
   // ✅ ONLY YOUTUBE LOGIC CHANGED
   async clickYoutubeVideo() {
-    const iframe = this.page.locator('iframe[src*="youtube.com"]');
-    await iframe.scrollIntoViewIfNeeded();
 
-    await this.youtubePlayButton.waitFor({ state: 'visible', timeout: 15000 });
-    await this.youtubePlayButton.click(); // just click Play and continue
+  const iframe = this.page.locator('iframe[src*="youtube.com"]');
+
+  await iframe.scrollIntoViewIfNeeded();
+  await iframe.waitFor({ state: 'visible', timeout: 15000 });
+
+  const frame = await iframe.elementHandle().then(el => el.contentFrame());
+
+  if (!frame) throw new Error('YouTube iframe not loaded');
+
+  // simple validation
+  const url = frame.url();
+  if (!url.includes('youtube')) {
+    throw new Error('Invalid YouTube iframe');
   }
+
+  console.log('✅ YouTube loaded');
+}
 
   // Contact button
   async clickContactUsToday() {

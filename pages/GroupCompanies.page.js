@@ -5,7 +5,7 @@ export class GroupCompaniesPage {
     // Group Companies card locators
     this.marwadiOnline = page.locator('//a[@href="https://www.marwadionline.com"]');
     this.marwadiUniversity = page.locator('//a[@href="https://www.marwadiuniversity.ac.in"]');
-    this.financeOne = page.locator('//a[@href="https://www.1finance.co.in"]');
+    this.financeOne = page.locator('//a[@href="https://1finance.co.in"]');
     this.bloomfield = page.locator('//a[@href="https://bloomfieldinnovations.in"]');
     this.financeP2P = page.locator('//a[@href="https://1financep2p.com"]');
     this.pixonEnergy = page.locator('//a[@href="https://www.pixonenergy.com"]');
