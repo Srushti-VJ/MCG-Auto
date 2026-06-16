@@ -45,13 +45,13 @@ jobs:
               console.log('skipped=' + skipped);
               console.log('total='   + total);
               console.log('status='  + (failed > 0 ? 'FAILED' : 'PASSED'));
-            " >> \$GITHUB_OUTPUT
+            " >> $GITHUB_OUTPUT
           else
-            echo "passed=0"  >> \$GITHUB_OUTPUT
-            echo "failed=0"  >> \$GITHUB_OUTPUT
-            echo "skipped=0" >> \$GITHUB_OUTPUT
-            echo "total=0"   >> \$GITHUB_OUTPUT
-            echo "status=UNKNOWN" >> \$GITHUB_OUTPUT
+            echo "passed=0"  >> $GITHUB_OUTPUT
+            echo "failed=0"  >> $GITHUB_OUTPUT
+            echo "skipped=0" >> $GITHUB_OUTPUT
+            echo "total=0"   >> $GITHUB_OUTPUT
+            echo "status=UNKNOWN" >> $GITHUB_OUTPUT
           fi
 
       - name: Upload Playwright Report
@@ -63,6 +63,7 @@ jobs:
 
       - name: Send Email Notification
         if: always()
+        continue-on-error: true
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
