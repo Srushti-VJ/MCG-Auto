@@ -1,11 +1,8 @@
 name: Daily Playwright Automation
 
 on:
-  # Runs every day at 9:00 AM IST (3:30 AM UTC)
   schedule:
     - cron: '30 3 * * *'
-
-  # Lets you run it manually from the GitHub Actions tab
   workflow_dispatch:
 
 jobs:
@@ -13,32 +10,80 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Get your code
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Install Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # Step 3: Install project dependencies
       - name: Install Dependencies
         run: npm ci
 
-      # Step 4: Install Playwright browsers
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      # Step 5: Run all Playwright tests
       - name: Run Playwright Tests
         run: npx playwright test
+        continue-on-error: true
 
-      # Step 6: Upload the HTML report (even if tests fail)
+      - name: Extract Test Results
+        id: results
+        if: always()
+        run: |
+          if [ -f test-results.json ]; then
+            node -e "
+              const r = require('./test-results.json');
+              const s = r.stats;
+              const passed  = s.expected   || 0;
+              const failed  = s.unexpected || 0;
+              const skipped = s.skipped    || 0;
+              const total   = passed + failed + skipped;
+              console.log('passed='  + passed);
+              console.log('failed='  + failed);
+              console.log('skipped=' + skipped);
+              console.log('total='   + total);
+              console.log('status='  + (failed > 0 ? 'FAILED' : 'PASSED'));
+            " >> \$GITHUB_OUTPUT
+          else
+            echo "passed=0"  >> \$GITHUB_OUTPUT
+            echo "failed=0"  >> \$GITHUB_OUTPUT
+            echo "skipped=0" >> \$GITHUB_OUTPUT
+            echo "total=0"   >> \$GITHUB_OUTPUT
+            echo "status=UNKNOWN" >> \$GITHUB_OUTPUT
+          fi
+
       - name: Upload Playwright Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: Playwright-Report
           path: playwright-report
+
+      - name: Send Email Notification
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.GMAIL_USERNAME }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          subject: "MCG Automation [${{ steps.results.outputs.status }}] — Run #${{ github.run_number }}"
+          to: srushti.jadhav@atriina.com
+          from: MCG Automation <${{ secrets.GMAIL_USERNAME }}>
+          body: |
+            Daily Playwright Test Run — MCG Website
+            =========================================
+
+            Status  : ${{ steps.results.outputs.status }}
+            Passed  : ${{ steps.results.outputs.passed }}
+            Failed  : ${{ steps.results.outputs.failed }}
+            Skipped : ${{ steps.results.outputs.skipped }}
+            Total   : ${{ steps.results.outputs.total }}
+
+            View run details & download the HTML report:
+            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            (Click the link above → open the "Playwright-Report" artifact for the full HTML report)

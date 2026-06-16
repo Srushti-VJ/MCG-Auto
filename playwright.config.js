@@ -1,10 +1,15 @@
 const { defineConfig } = require('@playwright/test');
 
+const isCI = !!process.env.CI;
+
 module.exports = defineConfig({
-  timeout: 60000, // 30 seconds timeout for all actions
+  timeout: 60000,
+  reporter: isCI
+    ? [['html'], ['json', { outputFile: 'test-results.json' }]]
+    : 'html',
   use: {
     baseURL: 'https://www.marwadichandaranagroup.com',
-    headless: false,
-    slowMo: 1000   // 👈 1 second delay between actions
+    headless: isCI,
+    slowMo: isCI ? 0 : 1000,
   }
 });
